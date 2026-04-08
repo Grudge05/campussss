@@ -1,0 +1,278 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--red:#E24B4A;--red-light:#FCEBEB;--dark:#111;--card:#fff;--muted:#888;--border:#e5e5e5;--text:#111}
+  .app{font-family:'DM Sans',sans-serif;background:#f7f6f3;min-height:600px;color:var(--text)}
+  .topbar{background:#111;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px}
+  .logo{font-family:'Space Mono',monospace;color:#fff;font-size:14px;font-weight:700;letter-spacing:2px}
+  .logo span{color:var(--red)}
+  .nav{display:flex;gap:4px}
+  .nav-btn{background:none;border:none;color:#aaa;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+  .nav-btn.active,.nav-btn:hover{background:#fff1;color:#fff}
+  .user-dot{width:30px;height:30px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff}
+  .main{display:grid;grid-template-columns:220px 1fr;min-height:548px}
+  .sidebar{background:#1a1a1a;padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+  .sidebar-label{font-size:10px;color:#555;letter-spacing:1.5px;text-transform:uppercase;padding:12px 8px 6px;font-family:'Space Mono',monospace}
+  .side-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;font-weight:500;transition:all .15s}
+  .side-item:hover,.side-item.active{background:#ffffff12;color:#fff}
+  .side-item.active .side-dot{background:var(--red)}
+  .side-dot{width:7px;height:7px;border-radius:50%;background:#444;flex-shrink:0}
+  .content{padding:24px;display:flex;flex-direction:column;gap:20px;background:#f7f6f3}
+  .page-header{display:flex;align-items:flex-end;justify-content:space-between}
+  .page-title{font-size:22px;font-weight:600;color:#111}
+  .page-sub{font-size:13px;color:#888;margin-top:2px}
+  .date-pill{background:#111;color:#fff;font-size:12px;padding:7px 14px;border-radius:20px;font-family:'Space Mono',monospace;font-weight:700}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat-card{background:#fff;border-radius:12px;padding:16px;border:0.5px solid #e8e8e5}
+  .stat-num{font-size:28px;font-weight:600;font-family:'Space Mono',monospace;color:#111}
+  .stat-num.red{color:var(--red)}
+  .stat-label{font-size:12px;color:#888;margin-top:2px}
+  .stat-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;margin-top:6px;font-weight:500}
+  .badge-green{background:#EAF3DE;color:#3B6D11}
+  .badge-red{background:#FCEBEB;color:#A32D2D}
+  .badge-gray{background:#F1EFE8;color:#5F5E5A}
+  .grid-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .panel{background:#fff;border-radius:12px;padding:18px;border:0.5px solid #e8e8e5}
+  .panel-title{font-size:13px;font-weight:600;color:#111;letter-spacing:.3px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+  .panel-title span{font-size:11px;color:var(--red);font-weight:500;cursor:pointer}
+  .resource-item{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:0.5px solid #f0f0ee}
+  .resource-item:last-child{border:none}
+  .res-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;flex-shrink:0}
+  .icon-lab{background:#EEEDFE;color:#534AB7}
+  .icon-room{background:#E1F5EE;color:#0F6E56}
+  .icon-eq{background:#FAEEDA;color:#854F0B}
+  .res-info{flex:1}
+  .res-name{font-size:13px;font-weight:500;color:#111}
+  .res-sub{font-size:11px;color:#999;margin-top:1px}
+  .res-status{font-size:11px;padding:3px 9px;border-radius:10px;font-weight:500;white-space:nowrap}
+  .status-free{background:#EAF3DE;color:#3B6D11}
+  .status-busy{background:#FCEBEB;color:#A32D2D}
+  .status-soon{background:#FAEEDA;color:#854F0B}
+  .timeline{display:flex;flex-direction:column;gap:6px}
+  .tl-row{display:flex;align-items:center;gap:8px;font-size:12px}
+  .tl-time{font-family:'Space Mono',monospace;font-size:11px;color:#888;min-width:40px}
+  .tl-bar-wrap{flex:1;height:22px;background:#f0f0ee;border-radius:5px;overflow:hidden;position:relative}
+  .tl-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:#fff}
+  .bar-used{background:#E24B4A}
+  .bar-free{background:#1D9E75}
+  .bar-partial{background:#EF9F27}
+  .book-btn{background:#111;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;width:100%;margin-top:14px;font-family:'DM Sans',sans-serif;transition:background .15s}
+  .book-btn:hover{background:#E24B4A}
+  .insight-row{display:flex;gap:10px;flex-wrap:wrap}
+  .insight-chip{background:#f0f0ee;border-radius:8px;padding:10px 14px;flex:1;min-width:100px}
+  .ic-val{font-size:18px;font-weight:600;font-family:'Space Mono',monospace;color:#111}
+  .ic-label{font-size:11px;color:#888;margin-top:2px}
+  .usage-bar-wrap{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+  .usage-label{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:2px}
+  .usage-track{height:8px;background:#f0f0ee;border-radius:10px;overflow:hidden}
+  .usage-fill{height:100%;border-radius:10px;background:var(--red)}
+  .usage-fill.g{background:#1D9E75}
+  .usage-fill.a{background:#EF9F27}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="logo">CAMPUS<span>·</span>OPT</div>
+    <div class="nav">
+      <button class="nav-btn active">Dashboard</button>
+      <button class="nav-btn">Browse</button>
+      <button class="nav-btn">My Bookings</button>
+      <button class="nav-btn">Analytics</button>
+    </div>
+    <div class="user-dot">AK</div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="sidebar-label">Resources</div>
+      <div class="side-item active"><div class="side-dot"></div>All Resources</div>
+      <div class="side-item"><div class="side-dot"></div>Computer Labs</div>
+      <div class="side-item"><div class="side-dot"></div>Study Rooms</div>
+      <div class="side-item"><div class="side-dot"></div>Equipment</div>
+      <div class="side-item"><div class="side-dot"></div>Sports Facilities</div>
+      <div class="sidebar-label">Quick</div>
+      <div class="side-item"><div class="side-dot"></div>Book Now</div>
+      <div class="side-item"><div class="side-dot"></div>Favorites</div>
+      <div class="sidebar-label">Admin</div>
+      <div class="side-item"><div class="side-dot"></div>Usage Reports</div>
+      <div class="side-item"><div class="side-dot"></div>Settings</div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Resource Dashboard</div>
+          <div class="page-sub">Smart utilization across campus infrastructure</div>
+        </div>
+        <div class="date-pill">WED · 08 APR</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="totalRooms">0</div>
+          <div class="stat-label">Total Resources</div>
+          <div class="stat-badge badge-gray">across 6 buildings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:#1D9E75" id="availableRooms">0</div>
+          <div class="stat-label">Available Now</div>
+          <div class="stat-badge badge-green">64% free</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num red" id="occupiedRooms">0</div>
+          <div class="stat-label">Currently Booked</div>
+          <div class="stat-badge badge-red">4 peak hours</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="bookingsToday">0</div>
+          <div class="stat-label">Bookings Today</div>
+          <div class="stat-badge badge-green">+12% vs avg</div>
+        </div>
+      </div>
+
+      <div class="grid-two">
+        <div class="panel">
+          <div class="panel-title">Live Resource Status <span>View all →</span></div>
+          <div id="roomsContainer"></div>
+          <div class="resource-item">
+            <div class="res-icon icon-lab">LAB</div>
+            <div class="res-info">
+              <div class="res-name">Computer Lab A · Block 3</div>
+              <div class="res-sub">40 seats · last used 11 min ago</div>
+            </div>
+            <div class="res-status status-free">Available</div>
+          </div>
+          <div class="resource-item">
+            <div class="res-icon icon-room">RM</div>
+            <div class="res-info">
+              <div class="res-name">Study Room 2B</div>
+              <div class="res-sub">8 seats · booked till 3:00 PM</div>
+            </div>
+            <div class="res-status status-busy">Occupied</div>
+          </div>
+          <div class="resource-item">
+            <div class="res-icon icon-eq">EQ</div>
+            <div class="res-info">
+              <div class="res-name">3D Printer · Fab Lab</div>
+              <div class="res-sub">1 unit · queue: 2 students</div>
+            </div>
+            <div class="res-status status-soon">Free at 4 PM</div>
+          </div>
+          <div class="resource-item">
+            <div class="res-icon icon-lab">LAB</div>
+            <div class="res-info">
+              <div class="res-name">Physics Lab C</div>
+              <div class="res-sub">24 seats · open session</div>
+            </div>
+            <div class="res-status status-free">Available</div>
+          </div>
+          <button class="book-btn">+ Book a Resource</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Today's Availability Timeline <span>Full schedule →</span></div>
+          <div class="timeline">
+            <div class="tl-row">
+              <div class="tl-time">9 AM</div>
+              <div class="tl-bar-wrap"><div class="tl-bar bar-used" style="width:90%">Peak · Labs full</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-time">11 AM</div>
+              <div class="tl-bar-wrap"><div class="tl-bar bar-partial" style="width:65%">Moderate</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-time">1 PM</div>
+              <div class="tl-bar-wrap"><div class="tl-bar bar-used" style="width:85%">High demand</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-time">3 PM</div>
+              <div class="tl-bar-wrap" style="display:flex">
+                <div class="tl-bar bar-free" style="width:55%">Available</div>
+              </div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-time">5 PM</div>
+              <div class="tl-bar-wrap"><div class="tl-bar bar-free" style="width:30%">Low usage</div></div>
+            </div>
+            <div class="tl-row">
+              <div class="tl-time">7 PM</div>
+              <div class="tl-bar-wrap"><div class="tl-bar bar-partial" style="width:45%">Evening rush</div></div>
+            </div>
+          </div>
+
+          <div class="insight-row" style="margin-top:16px">
+            <div class="insight-chip">
+              <div class="ic-val">73%</div>
+              <div class="ic-label">Peak utilization</div>
+            </div>
+            <div class="insight-chip">
+              <div class="ic-val">3 PM</div>
+              <div class="ic-label">Best time to book</div>
+            </div>
+            <div class="insight-chip">
+              <div class="ic-val">~22m</div>
+              <div class="ic-label">Avg wait time</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Usage Insights by Resource Type <span>Full analytics →</span></div>
+        <div class="usage-bar-wrap">
+          <div>
+            <div class="usage-label"><span>Computer Labs</span><span>82%</span></div>
+            <div class="usage-track"><div class="usage-fill" style="width:82%"></div></div>
+          </div>
+          <div>
+            <div class="usage-label"><span>Study Rooms</span><span>61%</span></div>
+            <div class="usage-track"><div class="usage-fill a" style="width:61%"></div></div>
+          </div>
+          <div>
+            <div class="usage-label"><span>Equipment / Fab Lab</span><span>44%</span></div>
+            <div class="usage-track"><div class="usage-fill a" style="width:44%"></div></div>
+          </div>
+          <div>
+            <div class="usage-label"><span>Sports Facilities</span><span>29%</span></div>
+            <div class="usage-track"><div class="usage-fill g" style="width:29%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+
+/* ✅ MAKE NAV BUTTONS CLICKABLE */
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.onclick = () => {
+    alert(btn.innerText + " section opened");
+  };
+});
+
+/* ✅ MAKE SIDEBAR CLICKABLE */
+document.querySelectorAll(".side-item").forEach(item => {
+  item.onclick = () => {
+    alert(item.innerText + " clicked");
+  };
+});
+
+/* ✅ MAKE BOOK BUTTON WORK (already working but keep safe) */
+<script>
+
+/* SAFE NAV CLICK */
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    alert(btn.innerText);
+  });
+});
+
+/* SAFE SIDEBAR CLICK */
+document.querySelectorAll(".side-item").forEach(item => {
+  item.addEventListener("click", () => {
+    alert(item.innerText);
+  });
+});
+
+</script>
+</script>
