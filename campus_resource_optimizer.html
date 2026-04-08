@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CAMPUS·OPT — Resource Optimizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --red:#E24B4A;--red-light:#FCEBEB;--dark:#111;--card:#fff;
+  --muted:#888;--border:#e5e5e5;--text:#111;--green:#1D9E75;--amber:#EF9F27;
+  --bg:#f7f6f3;--sidebar:#1a1a1a;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:#111;padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
+.logo{font-family:'Space Mono',monospace;color:#fff;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer}
+.logo span{color:var(--red)}
+.nav{display:flex;gap:4px}
+.nav-btn{background:none;border:none;color:#aaa;font-size:12px;padding:6px 12px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.nav-btn.active,.nav-btn:hover{background:#ffffff1a;color:#fff}
+.user-dot{width:30px;height:30px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#fff;cursor:pointer;position:relative}
+.user-menu{position:absolute;top:38px;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;padding:8px;min-width:160px;display:none;box-shadow:0 8px 24px #0002}
+.user-menu.open{display:block}
+.user-menu-item{padding:8px 12px;font-size:13px;color:#333;border-radius:6px;cursor:pointer}
+.user-menu-item:hover{background:#f5f5f5}
+
+/* LAYOUT */
+.shell{display:flex;min-height:calc(100vh - 52px)}
+.sidebar{background:var(--sidebar);width:220px;flex-shrink:0;padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto}
+.sidebar-label{font-size:10px;color:#555;letter-spacing:1.5px;text-transform:uppercase;padding:12px 8px 6px;font-family:'Space Mono',monospace}
+.side-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;color:#aaa;font-size:13px;font-weight:500;transition:all .15s;user-select:none}
+.side-item:hover,.side-item.active{background:#ffffff12;color:#fff}
+.side-item.active .side-dot{background:var(--red)}
+.side-dot{width:7px;height:7px;border-radius:50%;background:#444;flex-shrink:0;transition:background .15s}
+
+/* CONTENT AREA */
+.content{flex:1;padding:24px;display:flex;flex-direction:column;gap:20px;min-height:0;overflow-y:auto}
+
+/* PAGE VIEWS */
+.page{display:none;flex-direction:column;gap:20px}
+.page.active{display:flex}
+
+/* HEADER */
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.page-title{font-size:22px;font-weight:600;color:#111}
+.page-sub{font-size:13px;color:#888;margin-top:2px}
+.date-pill{background:#111;color:#fff;font-size:12px;padding:7px 14px;border-radius:20px;font-family:'Space Mono',monospace;font-weight:700}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:#fff;border-radius:12px;padding:16px;border:0.5px solid #e8e8e5;transition:transform .15s,box-shadow .15s;cursor:default}
+.stat-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px #0001}
+.stat-num{font-size:28px;font-weight:600;font-family:'Space Mono',monospace;color:#111}
+.stat-num.red{color:var(--red)}
+.stat-num.green{color:var(--green)}
+.stat-label{font-size:12px;color:#888;margin-top:2px}
+.stat-badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:10px;margin-top:6px;font-weight:500}
+.badge-green{background:#EAF3DE;color:#3B6D11}
+.badge-red{background:#FCEBEB;color:#A32D2D}
+.badge-gray{background:#F1EFE8;color:#5F5E5A}
+.badge-amber{background:#FEF3DC;color:#7A4A00}
+
+/* PANELS */
+.grid-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.grid-two{grid-template-columns:1fr}}
+.panel{background:#fff;border-radius:12px;padding:18px;border:0.5px solid #e8e8e5}
+.panel-title{font-size:13px;font-weight:600;color:#111;letter-spacing:.3px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.panel-title-link{font-size:11px;color:var(--red);font-weight:500;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif}
+.panel-title-link:hover{text-decoration:underline}
+
+/* RESOURCE LIST */
+.resource-item{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:0.5px solid #f0f0ee;transition:background .1s;cursor:pointer;border-radius:6px;padding-left:4px}
+.resource-item:last-of-type{border:none}
+.resource-item:hover{background:#fafafa}
+.res-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;flex-shrink:0}
+.icon-lab{background:#EEEDFE;color:#534AB7}
+.icon-room{background:#E1F5EE;color:#0F6E56}
+.icon-eq{background:#FAEEDA;color:#854F0B}
+.icon-sport{background:#E8F4FE;color:#1565C0}
+.res-info{flex:1;min-width:0}
+.res-name{font-size:13px;font-weight:500;color:#111}
+.res-sub{font-size:11px;color:#999;margin-top:1px}
+.res-status{font-size:11px;padding:3px 9px;border-radius:10px;font-weight:500;white-space:nowrap}
+.status-free{background:#EAF3DE;color:#3B6D11}
+.status-busy{background:#FCEBEB;color:#A32D2D}
+.status-soon{background:#FAEEDA;color:#854F0B}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:6px}
+.tl-row{display:flex;align-items:center;gap:8px;font-size:12px}
+.tl-time{font-family:'Space Mono',monospace;font-size:11px;color:#888;min-width:44px}
+.tl-bar-wrap{flex:1;height:22px;background:#f0f0ee;border-radius:5px;overflow:hidden}
+.tl-bar{height:100%;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:#fff;transition:width .5s ease}
+.bar-used{background:#E24B4A}
+.bar-free{background:#1D9E75}
+.bar-partial{background:#EF9F27}
+.insight-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.insight-chip{background:#f0f0ee;border-radius:8px;padding:10px 14px;flex:1;min-width:80px}
+.ic-val{font-size:18px;font-weight:600;font-family:'Space Mono',monospace;color:#111}
+.ic-label{font-size:11px;color:#888;margin-top:2px}
+
+/* USAGE BARS */
+.usage-bar-wrap{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.usage-label{display:flex;justify-content:space-between;font-size:12px;color:#666;margin-bottom:3px}
+.usage-track{height:8px;background:#f0f0ee;border-radius:10px;overflow:hidden}
+.usage-fill{height:100%;border-radius:10px;background:var(--red);transition:width .6s ease}
+.usage-fill.g{background:var(--green)}
+.usage-fill.a{background:var(--amber)}
+
+/* BUTTONS */
+.btn{border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:#111;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;width:100%;margin-top:14px}
+.btn-primary:hover{background:var(--red)}
+.btn-red{background:var(--red);color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500}
+.btn-red:hover{background:#c73b3a}
+.btn-outline{background:transparent;color:#111;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid #ddd}
+.btn-outline:hover{background:#f5f5f5}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+
+/* MODAL OVERLAY */
+.modal-overlay{position:fixed;inset:0;background:#0007;z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;padding:28px;width:460px;max-width:95vw;transform:translateY(20px);transition:transform .2s;max-height:90vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-size:18px;font-weight:600;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888;padding:0 4px}
+.modal-close:hover{color:#111}
+
+/* FORM */
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:#555;margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.5px}
+.form-input,.form-select{width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s;background:#fff}
+.form-input:focus,.form-select:focus{border-color:#111}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-note{font-size:11px;color:#999;margin-top:4px}
+
+/* BROWSE PAGE */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.filter-chip{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid #ddd;background:#fff;transition:all .15s;font-family:'DM Sans',sans-serif}
+.filter-chip.active,.filter-chip:hover{background:#111;color:#fff;border-color:#111}
+.search-bar{flex:1;min-width:180px;position:relative}
+.search-bar input{width:100%;padding:8px 14px 8px 36px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;background:#fff}
+.search-bar input:focus{border-color:#111}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#aaa;font-size:14px}
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.resource-card{background:#fff;border-radius:12px;padding:16px;border:0.5px solid #e8e8e5;cursor:pointer;transition:all .2s}
+.resource-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px #0001;border-color:#ddd}
+.rc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.rc-title{font-size:14px;font-weight:600;color:#111}
+.rc-sub{font-size:11px;color:#999;margin-top:2px}
+.rc-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rc-tag{font-size:10px;padding:3px 8px;border-radius:6px;background:#f0f0ee;color:#555;font-weight:500}
+.rc-actions{display:flex;gap:8px;margin-top:12px}
+
+/* MY BOOKINGS */
+.booking-list{display:flex;flex-direction:column;gap:10px}
+.booking-card{background:#fff;border-radius:12px;padding:16px;border:0.5px solid #e8e8e5;display:flex;align-items:center;gap:14px}
+.booking-time{font-family:'Space Mono',monospace;font-size:11px;color:#888;min-width:80px;text-align:center}
+.booking-time .b-date{font-size:10px;color:#bbb;margin-top:2px}
+.booking-info{flex:1}
+.booking-name{font-size:14px;font-weight:500;color:#111}
+.booking-sub{font-size:11px;color:#999;margin-top:2px}
+.booking-actions{display:flex;gap:8px}
+.empty-state{text-align:center;padding:48px 20px;color:#bbb}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.empty-title{font-size:15px;font-weight:500;color:#888;margin-bottom:6px}
+.empty-sub{font-size:12px}
+
+/* ANALYTICS */
+.analytics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.analytics-grid{grid-template-columns:1fr 1fr}}
+.analytic-card{background:#fff;border-radius:12px;padding:18px;border:0.5px solid #e8e8e5;text-align:center}
+.analytic-num{font-size:32px;font-weight:700;font-family:'Space Mono',monospace}
+.analytic-label{font-size:11px;color:#888;margin-top:4px}
+.chart-bar-wrap{display:flex;align-items:flex-end;gap:8px;height:120px;margin-top:12px}
+.chart-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.chart-bar{width:100%;border-radius:4px 4px 0 0;transition:height .5s ease;min-height:4px}
+.chart-bar-label{font-size:10px;color:#888;font-family:'Space Mono',monospace}
+.chart-bar-val{font-size:10px;color:#555;font-weight:600}
+
+/* TOAST */
+.toast-container{position:fixed;bottom:20px;right:20px;z-index:300;display:flex;flex-direction:column;gap:8px}
+.toast{background:#111;color:#fff;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;transform:translateX(120%);transition:transform .3s;max-width:300px}
+.toast.show{transform:translateX(0)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid #4A90E2}
+
+/* SETTINGS PAGE */
+.settings-section{background:#fff;border-radius:12px;padding:20px;border:0.5px solid #e8e8e5;margin-bottom:14px}
+.settings-title{font-size:14px;font-weight:600;margin-bottom:14px;color:#111}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid #f5f5f5}
+.settings-row:last-child{border:none}
+.settings-label{font-size:13px;font-weight:500;color:#111}
+.settings-sub{font-size:11px;color:#999;margin-top:2px}
+.toggle{width:40px;height:22px;background:#ddd;border-radius:11px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:left .2s}
+.toggle.on::after{left:21px}
+
+/* USAGE REPORT PAGE */
+.report-table{width:100%;border-collapse:collapse;font-size:13px}
+.report-table th{text-align:left;padding:10px 14px;font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #f0f0ee}
+.report-table td{padding:10px 14px;border-bottom:0.5px solid #f5f5f5;color:#333}
+.report-table tr:last-child td{border:none}
+.report-table tr:hover td{background:#fafafa}
+
+/* DETAIL MODAL */
+.detail-header{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+.detail-icon{width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;flex-shrink:0}
+.detail-title{font-size:18px;font-weight:600;color:#111}
+.detail-sub{font-size:12px;color:#999;margin-top:3px}
+.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.detail-stat{background:#f7f6f3;border-radius:8px;padding:10px;text-align:center}
+.detail-stat-val{font-size:16px;font-weight:700;font-family:'Space Mono',monospace}
+.detail-stat-label{font-size:10px;color:#999;margin-top:2px}
+.slots-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:10px}
+.slot{padding:6px;border-radius:6px;text-align:center;font-size:10px;font-family:'Space Mono',monospace;cursor:pointer;transition:all .15s;font-weight:600}
+.slot.free{background:#EAF3DE;color:#3B6D11}
+.slot.free:hover{background:#d0e8b8}
+.slot.busy{background:#FCEBEB;color:#A32D2D;cursor:not-allowed;opacity:.7}
+.slot.selected{background:#111;color:#fff}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo" onclick="showPage('dashboard')">CAMPUS<span>·</span>OPT</div>
+  <div class="nav">
+    <button class="nav-btn active" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-btn" onclick="showPage('browse',this)">Browse</button>
+    <button class="nav-btn" onclick="showPage('bookings',this)">My Bookings</button>
+    <button class="nav-btn" onclick="showPage('analytics',this)">Analytics</button>
+  </div>
+  <div class="user-dot" onclick="toggleUserMenu()">AK
+    <div class="user-menu" id="userMenu">
+      <div class="user-menu-item">👤 My Profile</div>
+      <div class="user-menu-item" onclick="showPage('bookings')">📅 My Bookings</div>
+      <div class="user-menu-item" onclick="showPage('settings')">⚙️ Settings</div>
+      <div class="user-menu-item" style="color:var(--red)">🚪 Sign Out</div>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-label">Resources</div>
+    <div class="side-item active" onclick="sideNav(this,'browse','all')"><div class="side-dot"></div>All Resources</div>
+    <div class="side-item" onclick="sideNav(this,'browse','lab')"><div class="side-dot"></div>Computer Labs</div>
+    <div class="side-item" onclick="sideNav(this,'browse','room')"><div class="side-dot"></div>Study Rooms</div>
+    <div class="side-item" onclick="sideNav(this,'browse','equipment')"><div class="side-dot"></div>Equipment</div>
+    <div class="side-item" onclick="sideNav(this,'browse','sport')"><div class="side-dot"></div>Sports Facilities</div>
+    <div class="sidebar-label">Quick</div>
+    <div class="side-item" onclick="openBookModal()"><div class="side-dot"></div>Book Now</div>
+    <div class="side-item" onclick="showPage('bookings')"><div class="side-dot"></div>My Bookings</div>
+    <div class="sidebar-label">Admin</div>
+    <div class="side-item" onclick="showPage('reports')"><div class="side-dot"></div>Usage Reports</div>
+    <div class="side-item" onclick="showPage('settings')"><div class="side-dot"></div>Settings</div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Resource Dashboard</div>
+          <div class="page-sub">Smart utilization across campus infrastructure</div>
+        </div>
+        <div class="date-pill" id="datePill">WED · 08 APR</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">Total Resources</div>
+          <div class="stat-badge badge-gray">across 6 buildings</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num green" id="stat-avail">0</div>
+          <div class="stat-label">Available Now</div>
+          <div class="stat-badge badge-green" id="stat-avail-pct">—</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num red" id="stat-occ">0</div>
+          <div class="stat-label">Currently Booked</div>
+          <div class="stat-badge badge-red">4 peak hours</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-bookings">0</div>
+          <div class="stat-label">Bookings Today</div>
+          <div class="stat-badge badge-green">+12% vs avg</div>
+        </div>
+      </div>
+
+      <div class="grid-two">
+        <div class="panel">
+          <div class="panel-title">Live Resource Status <button class="panel-title-link btn" onclick="showPage('browse')">View all →</button></div>
+          <div id="liveResourceList"></div>
+          <button class="btn btn-primary" onclick="openBookModal()">+ Book a Resource</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Today's Availability Timeline <button class="panel-title-link btn" onclick="showPage('analytics')">Full schedule →</button></div>
+          <div class="timeline" id="timeline"></div>
+          <div class="insight-row">
+            <div class="insight-chip"><div class="ic-val" id="insight-peak">—</div><div class="ic-label">Peak utilization</div></div>
+            <div class="insight-chip"><div class="ic-val">3 PM</div><div class="ic-label">Best time to book</div></div>
+            <div class="insight-chip"><div class="ic-val">~22m</div><div class="ic-label">Avg wait time</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Usage Insights by Resource Type <button class="panel-title-link btn" onclick="showPage('analytics')">Full analytics →</button></div>
+        <div class="usage-bar-wrap" id="usageInsights"></div>
+      </div>
+    </div>
+
+    <!-- BROWSE PAGE -->
+    <div class="page" id="page-browse">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Browse Resources</div>
+          <div class="page-sub">Find and book available campus resources</div>
+        </div>
+        <button class="btn btn-red" onclick="openBookModal()">+ Book Now</button>
+      </div>
+      <div class="filter-bar">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input type="text" placeholder="Search resources..." id="searchInput" oninput="filterResources()">
+        </div>
+        <button class="filter-chip active" data-filter="all" onclick="setFilter('all',this)">All</button>
+        <button class="filter-chip" data-filter="lab" onclick="setFilter('lab',this)">Computer Labs</button>
+        <button class="filter-chip" data-filter="room" onclick="setFilter('room',this)">Study Rooms</button>
+        <button class="filter-chip" data-filter="equipment" onclick="setFilter('equipment',this)">Equipment</button>
+        <button class="filter-chip" data-filter="sport" onclick="setFilter('sport',this)">Sports</button>
+        <button class="filter-chip" data-filter="free" onclick="setFilter('free',this)">Available Only</button>
+      </div>
+      <div class="resource-grid" id="resourceGrid"></div>
+    </div>
+
+    <!-- MY BOOKINGS PAGE -->
+    <div class="page" id="page-bookings">
+      <div class="page-header">
+        <div>
+          <div class="page-title">My Bookings</div>
+          <div class="page-sub">Your upcoming and past reservations</div>
+        </div>
+        <button class="btn btn-red" onclick="openBookModal()">+ New Booking</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Upcoming Bookings</div>
+        <div id="bookingList" class="booking-list"></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="page-analytics">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Analytics</div>
+          <div class="page-sub">Campus resource utilization insights</div>
+        </div>
+      </div>
+      <div class="analytics-grid">
+        <div class="analytic-card">
+          <div class="analytic-num" style="color:var(--red)" id="an-peak">73%</div>
+          <div class="analytic-label">Peak Utilization</div>
+        </div>
+        <div class="analytic-card">
+          <div class="analytic-num" style="color:var(--green)" id="an-bookings">0</div>
+          <div class="analytic-label">Total Bookings Today</div>
+        </div>
+        <div class="analytic-card">
+          <div class="analytic-num">~22m</div>
+          <div class="analytic-label">Avg Wait Time</div>
+        </div>
+      </div>
+      <div class="grid-two">
+        <div class="panel">
+          <div class="panel-title">Hourly Usage Today</div>
+          <div class="chart-bar-wrap" id="hourlyChart"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Usage by Resource Type</div>
+          <div class="usage-bar-wrap" id="analyticsUsage"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Full Availability Timeline</div>
+        <div class="timeline" id="analyticsTimeline"></div>
+      </div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Usage Reports</div>
+          <div class="page-sub">Detailed logs and admin analytics</div>
+        </div>
+        <button class="btn btn-outline" onclick="exportReport()">⬇ Export CSV</button>
+      </div>
+      <div class="panel">
+        <div class="panel-title">All Bookings Log</div>
+        <table class="report-table" id="reportTable">
+          <thead><tr>
+            <th>Resource</th><th>Type</th><th>User</th><th>Time Slot</th><th>Status</th>
+          </tr></thead>
+          <tbody id="reportBody"></tbody>
+        </table>
+      </div>
+      <div class="panel" style="margin-top:0">
+        <div class="panel-title">Usage by Resource Type</div>
+        <div class="usage-bar-wrap" id="reportsUsage"></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="page-title">Settings</div><div class="page-sub">Manage your preferences and account</div></div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Notifications</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Booking Confirmations</div><div class="settings-sub">Get notified when a booking is confirmed</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Booking Reminders</div><div class="settings-sub">Remind me 15 mins before my booking</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Availability Alerts</div><div class="settings-sub">Alert when a favorite resource becomes free</div></div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Weekly Reports</div><div class="settings-sub">Receive weekly usage summary</div></div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Account</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Display Name</div><div class="settings-sub">Aditya Kumar (AK)</div></div>
+          <button class="btn btn-outline btn-sm" onclick="showToast('Edit profile coming soon!','info')">Edit</button>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Email</div><div class="settings-sub">aditya.kumar@vitbhopal.ac.in</div></div>
+          <button class="btn btn-outline btn-sm" onclick="showToast('Email change coming soon!','info')">Change</button>
+        </div>
+        <div class="settings-row">
+          <div><div class="settings-label">Default Building</div><div class="settings-sub">Block 3 — Main Campus</div></div>
+          <button class="btn btn-outline btn-sm" onclick="showToast('Preference saved!','success')">Save</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">Data</div>
+        <div class="settings-row">
+          <div><div class="settings-label">Clear My Bookings</div><div class="settings-sub">Remove all your bookings from records</div></div>
+          <button class="btn btn-sm" style="background:#FCEBEB;color:var(--red);border:none;padding:5px 12px;border-radius:6px;cursor:pointer" onclick="clearBookings()">Clear</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /shell -->
+
+<!-- BOOK MODAL -->
+<div class="modal-overlay" id="bookModal">
+  <div class="modal">
+    <div class="modal-title">Book a Resource <button class="modal-close" onclick="closeModal('bookModal')">×</button></div>
+    <div class="form-group">
+      <label class="form-label">Select Resource</label>
+      <select class="form-select" id="bookResource" onchange="updateSlots()">
+        <option value="">— Choose a resource —</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input type="text" class="form-input" id="bookUser" placeholder="e.g. Aditya Kumar" value="Aditya Kumar">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Start Hour</label>
+        <select class="form-select" id="bookStart" onchange="updateSlots()">
+          <option value="8">8:00 AM</option><option value="9">9:00 AM</option>
+          <option value="10">10:00 AM</option><option value="11">11:00 AM</option>
+          <option value="12">12:00 PM</option><option value="13">1:00 PM</option>
+          <option value="14">2:00 PM</option><option value="15">3:00 PM</option>
+          <option value="16">4:00 PM</option><option value="17">5:00 PM</option>
+          <option value="18">6:00 PM</option><option value="19">7:00 PM</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">End Hour</label>
+        <select class="form-select" id="bookEnd">
+          <option value="9">9:00 AM</option><option value="10">10:00 AM</option>
+          <option value="11">11:00 AM</option><option value="12">12:00 PM</option>
+          <option value="13">1:00 PM</option><option value="14">2:00 PM</option>
+          <option value="15" selected>3:00 PM</option><option value="16">4:00 PM</option>
+          <option value="17">5:00 PM</option><option value="18">6:00 PM</option>
+          <option value="19">7:00 PM</option><option value="20">8:00 PM</option>
+        </select>
+      </div>
+    </div>
+    <div id="slotConflictMsg" style="display:none;background:#FCEBEB;color:#A32D2D;padding:10px 14px;border-radius:8px;font-size:12px;margin-bottom:12px">
+      ⚠️ This slot is already booked. Please choose a different time.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Purpose (optional)</label>
+      <input type="text" class="form-input" id="bookPurpose" placeholder="e.g. Group project meeting">
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-outline" style="flex:1;padding:10px" onclick="closeModal('bookModal')">Cancel</button>
+      <button class="btn btn-red" style="flex:2;padding:10px" onclick="submitBooking()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-title"><span id="detail-modal-title">Resource Detail</span> <button class="modal-close" onclick="closeModal('detailModal')">×</button></div>
+    <div id="detailModalBody"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ============================================================
+// IN-MEMORY DATABASE
+// ============================================================
+const DB = {
+  resources: [
+    {id:'R01',name:'Computer Lab A',location:'Block 3',type:'lab',seats:40,building:'Block 3',desc:'High-performance computing lab with 40 workstations, dual monitors, and fast internet.'},
+    {id:'R02',name:'Computer Lab B',location:'Block 3',type:'lab',seats:35,building:'Block 3',desc:'Programming lab equipped with IDE software, version control tools, and collaborative screens.'},
+    {id:'R03',name:'Computer Lab C',location:'Block 5',type:'lab',seats:30,building:'Block 5',desc:'General purpose computing lab. Available for all students.'},
+    {id:'R04',name:'Study Room 2B',location:'Library Wing',type:'room',seats:8,building:'Library Wing',desc:'Quiet study room with whiteboard, projector, and conference calling setup.'},
+    {id:'R05',name:'Study Room 3A',location:'Library Wing',type:'room',seats:6,building:'Library Wing',desc:'Compact private study room ideal for small groups.'},
+    {id:'R06',name:'Study Room 4C',location:'Block 2',type:'room',seats:12,building:'Block 2',desc:'Large study hall with multiple tables, perfect for group discussions.'},
+    {id:'R07',name:'Physics Lab C',location:'Science Block',type:'lab',seats:24,building:'Science Block',desc:'Well-equipped physics lab for experiments and practicals.'},
+    {id:'R08',name:'3D Printer — Fab Lab',location:'Innovation Hub',type:'equipment',seats:1,building:'Innovation Hub',desc:'Industrial-grade 3D printer. Queue managed per session. Max 2 hours per booking.'},
+    {id:'R09',name:'Laser Cutter',location:'Innovation Hub',type:'equipment',seats:1,building:'Innovation Hub',desc:'Precision laser cutter for prototyping and design projects.'},
+    {id:'R10',name:'VR Headsets (×5)',location:'Design Lab',type:'equipment',seats:5,building:'Design Lab',desc:'Meta Quest VR headsets for immersive research and design exploration.'},
+    {id:'R11',name:'Basketball Court',location:'Sports Complex',type:'sport',seats:20,building:'Sports Complex',desc:'Full-sized indoor basketball court. Available for casual and competitive play.'},
+    {id:'R12',name:'Tennis Court A',location:'Sports Complex',type:'sport',seats:4,building:'Sports Complex',desc:'Well-maintained outdoor tennis court with flood lighting.'},
+    {id:'R13',name:'Badminton Hall',location:'Sports Complex',type:'sport',seats:8,building:'Sports Complex',desc:'4 badminton courts available for student bookings.'},
+  ],
+  bookings: [
+    {id:'B001',resourceId:'R02',user:'Aditya Kumar',start:9,end:11,status:'booked',purpose:'ML project work',date:new Date().toDateString()},
+    {id:'B002',resourceId:'R04',user:'Aditya Kumar',start:13,end:15,status:'booked',purpose:'Group discussion',date:new Date().toDateString()},
+    {id:'B003',resourceId:'R08',user:'Riya Shah',start:12,end:14,status:'booked',purpose:'Hackathon prototype',date:new Date().toDateString()},
+    {id:'B004',resourceId:'R07',user:'Aditya Kumar',start:14,end:16,status:'booked',purpose:'Physics lab session',date:new Date().toDateString()},
+    {id:'B005',resourceId:'R11',user:'Mohit Verma',start:17,end:19,status:'booked',purpose:'Basketball practice',date:new Date().toDateString()},
+  ]
+};
+
+let currentFilter = 'all';
+
+// ============================================================
+// HELPERS
+// ============================================================
+function getResource(id){ return DB.resources.find(r=>r.id===id); }
+
+function isOccupied(resourceId){
+  const now = new Date().getHours();
+  return DB.bookings.some(b=>b.resourceId===resourceId && b.start<=now && now<b.end && b.date===new Date().toDateString());
+}
+
+function nextFreeTime(resourceId){
+  const now = new Date().getHours();
+  const active = DB.bookings.filter(b=>b.resourceId===resourceId && b.date===new Date().toDateString() && b.end>now).sort((a,b)=>a.start-b.start);
+  if(!active.length) return null;
+  const cur = active.find(b=>b.start<=now && now<b.end);
+  if(!cur) return null;
+  return cur.end;
+}
+
+function getStatus(resourceId){
+  if(isOccupied(resourceId)){
+    const free = nextFreeTime(resourceId);
+    return free ? {label:`Free at ${free>12?free-12:free} ${free>=12?'PM':'AM'}`,cls:'status-soon'} : {label:'Occupied',cls:'status-busy'};
+  }
+  return {label:'Available',cls:'status-free'};
+}
+
+function typeIcon(type){
+  const map={lab:'LAB',room:'RM',equipment:'EQ',sport:'SP'};
+  const cls={lab:'icon-lab',room:'icon-room',equipment:'icon-eq',sport:'icon-sport'};
+  return {text:map[type]||'RS',cls:cls[type]||'icon-lab'};
+}
+
+function hourLabel(h){
+  if(h===12) return '12 PM';
+  if(h===0) return '12 AM';
+  return h>12?`${h-12} PM`:`${h} AM`;
+}
+
+function formatDatePill(){
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const months=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const d=new Date();
+  return `${days[d.getDay()]} · ${String(d.getDate()).padStart(2,'0')} ${months[d.getMonth()]}`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name, btnEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name)?.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btnEl) btnEl.classList.add('active');
+  else{
+    const match = {'dashboard':0,'browse':1,'bookings':2,'analytics':3}[name];
+    if(match!==undefined) document.querySelectorAll('.nav-btn')[match]?.classList.add('active');
+  }
+  if(name==='browse') renderBrowse();
+  if(name==='bookings') renderBookings();
+  if(name==='analytics') renderAnalytics();
+  if(name==='reports') renderReports();
+  closeUserMenu();
+}
+
+function sideNav(el, page, filter){
+  document.querySelectorAll('.side-item').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  currentFilter = filter;
+  showPage(page);
+  if(page==='browse'){ setFilter(filter, document.querySelector(`.filter-chip[data-filter="${filter}"]`)); }
+}
+
+function toggleUserMenu(){ document.getElementById('userMenu').classList.toggle('open'); }
+function closeUserMenu(){ document.getElementById('userMenu').classList.remove('open'); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.user-dot')) closeUserMenu(); });
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard(){
+  document.getElementById('datePill').textContent = formatDatePill();
+  const total = DB.resources.length;
+  const occupied = DB.resources.filter(r=>isOccupied(r.id)).length;
+  const avail = total - occupied;
+  const pct = Math.round(avail/total*100);
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-avail').textContent = avail;
+  document.getElementById('stat-avail-pct').textContent = `${pct}% free`;
+  document.getElementById('stat-occ').textContent = occupied;
+  document.getElementById('stat-bookings').textContent = DB.bookings.filter(b=>b.date===new Date().toDateString()).length;
+
+  // Live resource list (show 4)
+  const list = document.getElementById('liveResourceList');
+  list.innerHTML = DB.resources.slice(0,4).map(r=>{
+    const st = getStatus(r.id);
+    const ic = typeIcon(r.type);
+    return `<div class="resource-item" onclick="openDetail('${r.id}')">
+      <div class="res-icon ${ic.cls}">${ic.text}</div>
+      <div class="res-info">
+        <div class="res-name">${r.name} · ${r.location}</div>
+        <div class="res-sub">${r.seats} seat${r.seats>1?'s':''} · ${r.type}</div>
+      </div>
+      <div class="res-status ${st.cls}">${st.label}</div>
+    </div>`;
+  }).join('');
+
+  // Timeline
+  const tlData = [
+    {hour:'9 AM',pct:90,type:'used',label:'Peak · Labs full'},
+    {hour:'11 AM',pct:65,type:'partial',label:'Moderate'},
+    {hour:'1 PM',pct:85,type:'used',label:'High demand'},
+    {hour:'3 PM',pct:40,type:'free',label:'Available'},
+    {hour:'5 PM',pct:30,type:'free',label:'Low usage'},
+    {hour:'7 PM',pct:45,type:'partial',label:'Evening rush'},
+  ];
+  document.getElementById('timeline').innerHTML = tlData.map(t=>`
+    <div class="tl-row">
+      <div class="tl-time">${t.hour}</div>
+      <div class="tl-bar-wrap"><div class="tl-bar bar-${t.type}" style="width:${t.pct}%">${t.label}</div></div>
+    </div>`).join('');
+  document.getElementById('insight-peak').textContent = '73%';
+
+  // Usage insights
+  const types=[{k:'lab',label:'Computer Labs',pct:82,cls:''},{k:'room',label:'Study Rooms',pct:61,cls:'a'},{k:'equipment',label:'Equipment / Fab Lab',pct:44,cls:'a'},{k:'sport',label:'Sports Facilities',pct:29,cls:'g'}];
+  document.getElementById('usageInsights').innerHTML = types.map(t=>`
+    <div>
+      <div class="usage-label"><span>${t.label}</span><span>${t.pct}%</span></div>
+      <div class="usage-track"><div class="usage-fill ${t.cls}" style="width:${t.pct}%"></div></div>
+    </div>`).join('');
+}
+
+// ============================================================
+// BROWSE
+// ============================================================
+function renderBrowse(){
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  const f = currentFilter;
+  let res = DB.resources;
+  if(f==='free') res = res.filter(r=>!isOccupied(r.id));
+  else if(f!=='all') res = res.filter(r=>r.type===f);
+  if(q) res = res.filter(r=>r.name.toLowerCase().includes(q)||r.location.toLowerCase().includes(q)||r.type.toLowerCase().includes(q));
+
+  document.getElementById('resourceGrid').innerHTML = res.length ? res.map(r=>{
+    const st = getStatus(r.id);
+    const ic = typeIcon(r.type);
+    const typeNames={lab:'Computer Lab',room:'Study Room',equipment:'Equipment',sport:'Sports'};
+    return `<div class="resource-card" onclick="openDetail('${r.id}')">
+      <div class="rc-header">
+        <div>
+          <div class="rc-title">${r.name}</div>
+          <div class="rc-sub">${r.location} · ${r.building}</div>
+        </div>
+        <div class="res-status ${st.cls}">${st.label}</div>
+      </div>
+      <div style="font-size:12px;color:#888;margin-top:6px">${r.desc.slice(0,80)}…</div>
+      <div class="rc-meta">
+        <span class="rc-tag">${r.seats} seat${r.seats>1?'s':''}</span>
+        <span class="rc-tag">${typeNames[r.type]||r.type}</span>
+      </div>
+      <div class="rc-actions">
+        <button class="btn btn-outline btn-sm" style="flex:1" onclick="event.stopPropagation();openDetail('${r.id}')">Details</button>
+        <button class="btn btn-red btn-sm" style="flex:1" onclick="event.stopPropagation();openBookModalFor('${r.id}')">Book</button>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty-state" style="grid-column:1/-1"><div class="empty-icon">🔍</div><div class="empty-title">No resources found</div><div class="empty-sub">Try a different filter or search term</div></div>';
+}
+
+function setFilter(f, el){
+  currentFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el?.classList.add('active');
+  renderBrowse();
+}
+
+function filterResources(){ renderBrowse(); }
+
+// ============================================================
+// BOOKINGS
+// ============================================================
+function renderBookings(){
+  const myBookings = DB.bookings.filter(b=>b.user==='Aditya Kumar');
+  const list = document.getElementById('bookingList');
+  if(!myBookings.length){
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">No bookings yet</div><div class="empty-sub">Book a resource to see it here</div></div>`;
+    return;
+  }
+  list.innerHTML = myBookings.map(b=>{
+    const r = getResource(b.resourceId);
+    if(!r) return '';
+    return `<div class="booking-card">
+      <div class="booking-time">
+        ${hourLabel(b.start)}–${hourLabel(b.end)}
+        <div class="b-date">${b.date}</div>
+      </div>
+      <div class="res-icon ${typeIcon(r.type).cls}" style="flex-shrink:0">${typeIcon(r.type).text}</div>
+      <div class="booking-info">
+        <div class="booking-name">${r.name}</div>
+        <div class="booking-sub">${r.location}${b.purpose?' · '+b.purpose:''}</div>
+      </div>
+      <div class="booking-actions">
+        <span class="res-status status-free">${b.status}</span>
+        <button class="btn btn-sm" style="background:#FCEBEB;color:var(--red);border:none;cursor:pointer" onclick="cancelBooking('${b.id}')">Cancel</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function cancelBooking(id){
+  const idx = DB.bookings.findIndex(b=>b.id===id);
+  if(idx>-1){ DB.bookings.splice(idx,1); renderBookings(); renderDashboard(); showToast('Booking cancelled.','info'); }
+}
+
+function clearBookings(){
+  DB.bookings = DB.bookings.filter(b=>b.user!=='Aditya Kumar');
+  showToast('All your bookings cleared.','info');
+  renderDashboard();
+}
+
+// ============================================================
+// ANALYTICS
+// ============================================================
+function renderAnalytics(){
+  document.getElementById('an-bookings').textContent = DB.bookings.filter(b=>b.date===new Date().toDateString()).length;
+  // Hourly chart
+  const hours = [8,9,10,11,12,13,14,15,16,17,18,19];
+  const maxBookings = 8;
+  const chartData = hours.map(h=>{
+    const cnt = DB.bookings.filter(b=>b.start<=h && h<b.end).length;
+    return {h,cnt};
+  });
+  const maxCnt = Math.max(...chartData.map(d=>d.cnt),1);
+  document.getElementById('hourlyChart').innerHTML = chartData.map(d=>{
+    const pct = Math.round(d.cnt/maxCnt*100);
+    const color = pct>70?'var(--red)':pct>40?'var(--amber)':'var(--green)';
+    return `<div class="chart-bar-col">
+      <div class="chart-bar-val">${d.cnt}</div>
+      <div class="chart-bar" style="height:${Math.max(pct,5)}%;background:${color}"></div>
+      <div class="chart-bar-label">${hourLabel(d.h).replace(' ','')}</div>
+    </div>`;
+  }).join('');
+  // Usage by type
+  const types=[{k:'lab',label:'Computer Labs',pct:82,cls:''},{k:'room',label:'Study Rooms',pct:61,cls:'a'},{k:'equipment',label:'Equipment',pct:44,cls:'a'},{k:'sport',label:'Sports',pct:29,cls:'g'}];
+  document.getElementById('analyticsUsage').innerHTML = types.map(t=>`
+    <div>
+      <div class="usage-label"><span>${t.label}</span><span>${t.pct}%</span></div>
+      <div class="usage-track"><div class="usage-fill ${t.cls}" style="width:${t.pct}%"></div></div>
+    </div>`).join('');
+  // Full timeline
+  const tlData=[{hour:'9 AM',pct:90,type:'used',label:'Peak'},{hour:'11 AM',pct:65,type:'partial',label:'Moderate'},{hour:'1 PM',pct:85,type:'used',label:'High demand'},{hour:'3 PM',pct:40,type:'free',label:'Available'},{hour:'5 PM',pct:30,type:'free',label:'Low'},{hour:'7 PM',pct:45,type:'partial',label:'Evening rush'}];
+  document.getElementById('analyticsTimeline').innerHTML = tlData.map(t=>`
+    <div class="tl-row">
+      <div class="tl-time">${t.hour}</div>
+      <div class="tl-bar-wrap"><div class="tl-bar bar-${t.type}" style="width:${t.pct}%">${t.label}</div></div>
+    </div>`).join('');
+}
+
+// ============================================================
+// REPORTS
+// ============================================================
+function renderReports(){
+  const tbody = document.getElementById('reportBody');
+  const typeNames={lab:'Lab',room:'Study Room',equipment:'Equipment',sport:'Sports'};
+  tbody.innerHTML = DB.bookings.map(b=>{
+    const r = getResource(b.resourceId);
+    if(!r) return '';
+    return `<tr>
+      <td>${r.name}</td>
+      <td>${typeNames[r.type]||r.type}</td>
+      <td>${b.user}</td>
+      <td>${hourLabel(b.start)} – ${hourLabel(b.end)}</td>
+      <td><span class="res-status status-free">${b.status}</span></td>
+    </tr>`;
+  }).join('');
+
+  const types=[{k:'lab',label:'Computer Labs',pct:82,cls:''},{k:'room',label:'Study Rooms',pct:61,cls:'a'},{k:'equipment',label:'Equipment',pct:44,cls:'a'},{k:'sport',label:'Sports',pct:29,cls:'g'}];
+  document.getElementById('reportsUsage').innerHTML = types.map(t=>`
+    <div>
+      <div class="usage-label"><span>${t.label}</span><span>${t.pct}%</span></div>
+      <div class="usage-track"><div class="usage-fill ${t.cls}" style="width:${t.pct}%"></div></div>
+    </div>`).join('');
+}
+
+function exportReport(){
+  const rows = [['Resource','Type','User','Start','End','Status']];
+  DB.bookings.forEach(b=>{
+    const r = getResource(b.resourceId);
+    if(r) rows.push([r.name,r.type,b.user,b.start,b.end,b.status]);
+  });
+  const csv = rows.map(r=>r.join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'campus_resource_report.csv';
+  a.click();
+  showToast('Report exported as CSV!','success');
+}
+
+// ============================================================
+// DETAIL MODAL
+// ============================================================
+function openDetail(resourceId){
+  const r = getResource(resourceId);
+  if(!r) return;
+  const st = getStatus(r.id);
+  const ic = typeIcon(r.type);
+  const myBookings = DB.bookings.filter(b=>b.resourceId===resourceId&&b.date===new Date().toDateString());
+  const slots = Array.from({length:12},(_,i)=>i+8).map(h=>{
+    const booked = myBookings.some(b=>b.start<=h&&h<b.end);
+    const isNow = new Date().getHours()===h;
+    return `<div class="slot ${booked?'busy':'free'}" title="${booked?'Booked':'Available at '+hourLabel(h)}">${hourLabel(h)}</div>`;
+  }).join('');
+  document.getElementById('detail-modal-title').textContent = r.name;
+  document.getElementById('detailModalBody').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-icon ${ic.cls}">${ic.text}</div>
+      <div>
+        <div class="detail-title">${r.name}</div>
+        <div class="detail-sub">${r.location} · ${r.building}</div>
+        <div class="res-status ${st.cls}" style="margin-top:6px;display:inline-block">${st.label}</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#666;margin-bottom:16px">${r.desc}</p>
+    <div class="detail-stats">
+      <div class="detail-stat"><div class="detail-stat-val">${r.seats}</div><div class="detail-stat-label">Seats</div></div>
+      <div class="detail-stat"><div class="detail-stat-val">${myBookings.length}</div><div class="detail-stat-label">Bookings Today</div></div>
+      <div class="detail-stat"><div class="detail-stat-val">${r.type==='lab'?'82%':r.type==='room'?'61%':r.type==='equipment'?'44%':'29%'}</div><div class="detail-stat-label">Avg Utilization</div></div>
+    </div>
+    <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Today's Slots</div>
+    <div class="slots-grid">${slots}</div>
+    <div style="display:flex;gap:8px;margin-top:10px;font-size:11px;color:#888">
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:#EAF3DE;border-radius:3px;display:inline-block"></span>Free</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:12px;height:12px;background:#FCEBEB;border-radius:3px;display:inline-block"></span>Booked</span>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button class="btn btn-outline" style="flex:1;padding:10px" onclick="closeModal('detailModal')">Close</button>
+      <button class="btn btn-red" style="flex:2;padding:10px" onclick="closeModal('detailModal');openBookModalFor('${r.id}')">Book This Resource</button>
+    </div>`;
+  openModal('detailModal');
+}
+
+// ============================================================
+// BOOK MODAL
+// ============================================================
+function populateResourceSelect(){
+  const sel = document.getElementById('bookResource');
+  const typeNames={lab:'Lab',room:'Room',equipment:'Equipment',sport:'Sports'};
+  sel.innerHTML = '<option value="">— Choose a resource —</option>' +
+    DB.resources.map(r=>{
+      const st = getStatus(r.id);
+      return `<option value="${r.id}">[${typeNames[r.type]}] ${r.name} — ${r.location} (${st.label})</option>`;
+    }).join('');
+}
+
+function openBookModal(){
+  populateResourceSelect();
+  document.getElementById('slotConflictMsg').style.display='none';
+  openModal('bookModal');
+}
+
+function openBookModalFor(resourceId){
+  populateResourceSelect();
+  document.getElementById('bookResource').value = resourceId;
+  document.getElementById('slotConflictMsg').style.display='none';
+  openModal('bookModal');
+}
+
+function updateSlots(){
+  const resourceId = document.getElementById('bookResource').value;
+  const start = parseInt(document.getElementById('bookStart').value);
+  const end = parseInt(document.getElementById('bookEnd').value);
+  if(!resourceId||!start||!end) return;
+  const conflict = DB.bookings.some(b=>b.resourceId===resourceId&&b.date===new Date().toDateString()&&!(end<=b.start||start>=b.end));
+  document.getElementById('slotConflictMsg').style.display = conflict?'block':'none';
+}
+
+function submitBooking(){
+  const resourceId = document.getElementById('bookResource').value;
+  const user = document.getElementById('bookUser').value.trim();
+  const start = parseInt(document.getElementById('bookStart').value);
+  const end = parseInt(document.getElementById('bookEnd').value);
+  const purpose = document.getElementById('bookPurpose').value.trim();
+  if(!resourceId){ showToast('Please select a resource.','error'); return; }
+  if(!user){ showToast('Please enter your name.','error'); return; }
+  if(start>=end){ showToast('End time must be after start time.','error'); return; }
+  const conflict = DB.bookings.some(b=>b.resourceId===resourceId&&b.date===new Date().toDateString()&&!(end<=b.start||start>=b.end));
+  if(conflict){ showToast('This slot is already booked!','error'); return; }
+  const id = 'B'+String(Date.now()).slice(-6);
+  DB.bookings.push({id,resourceId,user,start,end,status:'booked',purpose,date:new Date().toDateString()});
+  closeModal('bookModal');
+  renderDashboard();
+  showToast(`✅ Booking confirmed! ${hourLabel(start)}–${hourLabel(end)}`,'success');
+  document.getElementById('bookPurpose').value='';
+}
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ============================================================
+// TOAST
+// ============================================================
+function showToast(msg, type='info'){
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  requestAnimationFrame(()=>{ setTimeout(()=>t.classList.add('show'),10); });
+  setTimeout(()=>{ t.classList.remove('show'); setTimeout(()=>t.remove(),400); },3500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+renderDashboard();
+</script>
+</body>
+</html>
